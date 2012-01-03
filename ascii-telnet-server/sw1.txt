@@ -15,10 +15,10 @@
 45
                                                                   
                                                                   
-  Original Work   : Simon Jansen ( http://www.asciimation.co.nz/ )
+  Original Work: Simon Jansen ( http://www.asciimation.co.nz/ )   
   Telnetification                                                 
-  & Player        : Martin W. Kirst ( http://www.bitkings.de )    
-                                                                  
+  & Player     : Martin W. Kirst                                  
+                 https://github.com/nitram509/ascii-telnet-server 
                                                                   
   The hard work was done by Simon,                                
   I just wrote the telnet player                                  
