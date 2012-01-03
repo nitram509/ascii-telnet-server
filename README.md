@@ -1,1 +1,1 @@
-See [ascii-telnet-server/README.md](ascii-telnet-server/README.md) for more details.
+See 'ascii-telnet-server/README.md' for more details.
