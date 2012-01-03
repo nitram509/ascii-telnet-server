@@ -13,7 +13,7 @@ Command line parameters
 -----------------------
 
 See program output:
-    $> python ascii-telnet-server.py --help
+	$> python ascii-telnet-server.py --help
 
 Run as stand alone server
 -------------------------
