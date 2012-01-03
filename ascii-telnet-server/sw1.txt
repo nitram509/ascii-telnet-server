@@ -24,7 +24,7 @@
   I just wrote the telnet player                                  
   and placed it online using Simon's movie sources.               
                                                                   
-  Source code is available. Write eMail maki at bitkings.de       
+                                                                  
                                                                   
 30
 
