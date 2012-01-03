@@ -13,17 +13,19 @@ Command line parameters
 -----------------------
 
 See program output:
-	$> python ascii-telnet-server.py --help
+
+	$ python ascii-telnet-server.py --help
+
 
 Run as stand alone server
 -------------------------
 
-
 Simple call this Python script by using the sample movie file:
+
     $> python ascii-telnet-server.py --standalone -f sw1.txt
     Running TCP server on 0.0.0.0:23
     Playing movie sw1.txt
-    
+   
 
 Run as xinetd program
 ---------------------
