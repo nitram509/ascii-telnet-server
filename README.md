@@ -8,6 +8,4 @@ Screenshot:
 
 
 
-
-[![Bitdeli Badge](https://d2weczhvl823v0.cloudfront.net/nitram509/ascii-telnet-server/trend.png)](https://bitdeli.com/free "Bitdeli Badge")
-
+If you like this project, endorse please [![endorse](https://api.coderwall.com/nitram509/endorsecount.png)](https://coderwall.com/nitram509)
