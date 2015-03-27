@@ -75,7 +75,7 @@ class VT100Codes:
 		if not (intX<0 or intX>MAXDIM[0] or intY<0 or intY>MAXDIM[1]):
 			return VT100Codes.ESC+"[" + str(intY) + ";" + str(intX) + "H"
 		else:
-			sys.stderr.write("Warning, coordinates out of range. (%d,%d)" % (intX,y))
+			sys.stderr.write("Warning, coordinates out of range. (%d,%d)\n" % (intX,intY))
 			
 ###############################################################################
 class Frame:
