@@ -59,8 +59,8 @@ MAXDIM = (80, 24)  # maximum dimension of the VT100 terminal
 
 class VT100Codes(object):
     """
-        Some escape codes used within VT100 Streams
-        @see: http://ascii-table.com/ansi-escape-sequences-vt-100.php
+    Some escape codes used within VT100 Streams
+    @see: http://ascii-table.com/ansi-escape-sequences-vt-100.php
     """
     ESC = chr(27)  # VT100 escape character constant
     JMPHOME = ESC + "[H"  # Move cursor to upper left corner
@@ -88,10 +88,10 @@ class VT100Codes(object):
 
 class Frame(object):
     """
-        One frame is 67 columns and 13 rows in effective size on screen.
-        Use 'displayTime' to get the frame cycles this specific frame should
-        be displayed.
-        Use 'data' to get the 13 lines.
+    One frame is 67 columns and 13 rows in effective size on screen.
+    Use 'displayTime' to get the frame cycles this specific frame should
+    be displayed.
+    Use 'data' to get the 13 lines.
     """
 
     def __init__(self):
@@ -99,12 +99,84 @@ class Frame(object):
         self.data = []  # 13 lines
 
 
+class TimeBar(object):
+    """
+    TimeBar that appears at the bottom of the screen.
+    """
+
+    def __init__(self, duration, length, left_decorator="<", spacer=" ", right_decorator=">", marker="o"):
+        """
+
+        Args:
+            duration (int): Frame count that this bar will be tracking
+            length (int): Length in characters that the TimeBar will be on the screen
+            left_decorator:
+            spacer:
+            right_decorator:
+            marker:
+        """
+        self.length = length
+        self.height = 1
+
+        self.duration = duration
+
+        self.spacer = spacer
+        self.left_decorator = left_decorator
+        self.right_decorator = right_decorator
+        self.marker = marker
+
+        self.internal_length = self.length - len(self.left_decorator) - len(self.right_decorator)
+
+        if len(self.left_decorator + self.right_decorator + self.marker) > self.length:
+            raise ValueError("This TimeBar is too short for these decorators: {} {} {}".format(self.left_decorator,
+                                                                                               self.marker,
+                                                                                               self.right_decorator))
+
+    @property
+    def _empty_timebar(self):
+        time_bar_internals = "{0:{spacer}>{length}}".format("", spacer=self.spacer, length=self.internal_length)
+
+        return "{tb.left_decorator}{internals}{tb.right_decorator}".format(internals=time_bar_internals, tb=self)
+
+    def get_marker_postion(self, frame_num):
+        """
+        Return the index for the marker position on the TimeBar's internal length
+        Args:
+            frame_num: The Frame Number that the movie that the TimeBar marker should reflect
+
+        Returns:
+            int: index number for marker
+
+        """
+
+        return int(round(self.internal_length / self.duration * frame_num, 0))
+
+    def get_timebar(self, frame_num):
+        """
+        Args:
+            frame_num: The Frame Number that the movie that the TimeBar marker should reflect
+
+        Returns:
+            str: String representation of the TimeBar at the given Frame Number
+                Example:  "<    o               >"
+        """
+        marker_pos = self.get_marker_postion(frame_num)
+
+        if marker_pos >= self.internal_length:
+            # Make sure we never overwrite the end decorator.
+            marker_pos = self.internal_length - 1
+
+        return self._empty_timebar[:marker_pos + len(self.left_decorator)] + \
+               self.marker + \
+               self._empty_timebar[marker_pos + len(self.right_decorator) + 1:]
+
+
 class Movie(object):
     """
-        A movie consists of frames and is empty by default.
-        Movies are loaded from text files.
-        Use 'dimension' to get the dimension of the movie.
-        A movie only can be loaded once. A second try will fail.
+    A movie consists of frames and is empty by default.
+    Movies are loaded from text files.
+    Use 'dimension' to get the dimension of the movie.
+    A movie only can be loaded once. A second try will fail.
     """
 
     def __init__(self):
@@ -117,15 +189,15 @@ class Movie(object):
 
     def loadMovie(self, filepath):
         """
-            Loads the ASCII movie from given text file.
-            Using an encoded format, described on
-            http://www.asciimation.co.nz/asciimation/ascii_faq.html
-            In short:
-            67x14 chars,
-            lines separated with 0x0a,
-            first line is a number telling delay in number of frames,
-            13 lines effective movie size,
-            15 frames per second,
+        Loads the ASCII movie from given text file.
+        Using an encoded format, described on
+        http://www.asciimation.co.nz/asciimation/ascii_faq.html
+        In short:
+        67x14 chars,
+        lines separated with 0x0a,
+        first line is a number telling delay in number of frames,
+        13 lines effective movie size,
+        15 frames per second,
         """
         if self._loaded:
             # we don't want to be loaded twice.
@@ -160,16 +232,16 @@ class Movie(object):
 
     def getEncFrames(self):
         """
-            return a list with frames.
-            Each frame carries its own display time, thats why it's 'encoded'.
+        return a list with frames.
+        Each frame carries its own display time, thats why it's 'encoded'.
         """
         return self._frames
 
 
 class TelnetRequestHandler(StreamRequestHandler):
     """
-        Request handler used for multi threaded TCP server
-        @see: SocketServer.StreamRequestHandler
+    Request handler used for multi threaded TCP server
+    @see: SocketServer.StreamRequestHandler
     """
 
     filename = None  # filename is set once, so it's immutable and safe for multi threading
@@ -183,36 +255,38 @@ class TelnetRequestHandler(StreamRequestHandler):
 
     def onNextFrame(self, screen_buffer):
         """
-            Gets the current screen buffer and writes it to the socket.
+        Gets the current screen buffer and writes it to the socket.
         """
         self.wfile.write(screen_buffer.read())
 
 
 class VT100Player(object):
     """
-        Player class plays a movie. Offers higher methods for play, stop,
-        fast forward and rewind on the movie. It also stores the current
-        position.
-        It exposes the all frame numbers in real values. Therefore not encoded.
+    Player class plays a movie. Offers higher methods for play, stop,
+    fast forward and rewind on the movie. It also stores the current
+    position.
+    It exposes the all frame numbers in real values. Therefore not encoded.
     """
-    _TIMEBAR = " <" + " " * (MAXDIM[0] - 4) + ">"
 
     def __init__(self, movie):
         self._movie = movie
         self._movCursor = 0  # virtual cursor pointing to the current frame
         self._maxFrames = 0
+
         for f in self._movie.getEncFrames():
             self._maxFrames += f.displayTime
 
+        self.timebar = TimeBar(self._maxFrames, MAXDIM[0])
+
     def getDuration(self):
         """
-            return the number of seconds this movie is playing
+        return the number of seconds this movie is playing
         """
         return self._maxFrames // 15  # 15 frames per second
 
     def play(self):
         """
-            plays the movie
+        plays the movie
         """
         for frame in self._movie.getEncFrames():
             self._movCursor += frame.displayTime
@@ -221,18 +295,20 @@ class VT100Player(object):
 
     def _onNextFrameInternal(self, frame, frame_pos):
         """
-            internal event, happen when next frame should be drawn
+        internal event, happen when next frame should be drawn
         """
         screenbuf = BytesIO()
         if frame_pos <= 1:
             screenbuf.write(VT100Codes.CLEARSCRN)
         # center vertical, with respect to the time bar
-        y = (MAXDIM[1] - 1 - self._movie.dimension[1]) // 2
+        y = (MAXDIM[1] - self._movie.dimension[1] - self.timebar.height) // 2
 
         screenbuf.write(VT100Codes().JMPXY(1, y))
         for line in frame.data:
             screenbuf.write((line + "\r\n").encode())
-        self._updateTimeBar(screenbuf, frame_pos, self._maxFrames)
+
+        self._update_timebar(screenbuf, frame_pos)
+
         # now rewind the internal buffer and fire the public event
         screenbuf.seek(0)
         self.onNextFrame(screenbuf)
@@ -249,31 +325,21 @@ class VT100Player(object):
         """
         pass
 
-    def _updateTimeBar(self, screen_buffer, current_frame_pos, max_size=10):
+    def _update_timebar(self, screen_buffer, current_frame_pos):
         """
-            Writes at the bottom of the screen a line like this
-            <.......o.....................>
-            Left and right are one blank spaces from the max screen dimensions
-            It should visualize a timeline with 'o' is the current position.
+        Writes at the bottom of the screen a line like this
+        <.......o.....................>
+        It should visualize a timeline with 'o' is the current position.
 
         Args:
             screen_buffer: file like object, where the data is written to
             current_frame_pos: current cursor position on frame
-            max_size: maximum value
 
         Returns:
 
         """
         screen_buffer.write(VT100Codes().JMPXY(1, MAXDIM[1]))
-        screen_buffer.write(self._TIMEBAR.encode())  #
-        # now some weird calculations incl. some tricks to avoid rounding errors.
-        x = self._get_timebar_marker_position(current_frame_pos, max_size)
-        screen_buffer.write(VT100Codes().JMPXY(x + 3, MAXDIM[1]))
-        screen_buffer.write(b"o")
-
-    @staticmethod
-    def _get_timebar_marker_position(current_frame_pos, max_size):
-        return min((current_frame_pos * (MAXDIM[0] - 4)) // (max_size - 1), (MAXDIM[0] - 4 - 1))
+        screen_buffer.write(self.timebar.get_timebar(current_frame_pos).encode())  #
 
 
 class ThreadedTCPServer(ThreadingMixIn, TCPServer):
