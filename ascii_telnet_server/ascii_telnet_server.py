@@ -137,13 +137,12 @@ class Movie(object):
 
         with open(filepath) as f:
             for counter, line in enumerate(f):
-                i = -1
+                time_metadata = -1
                 if (counter % max_lines_per_frame) == 0:
-                    i = int(line[0:3])
-                if len(line.strip()) <= 3 and 0 < i <= 999:
+                    time_metadata = int(line[0:3])
+                if 0 < time_metadata <= 999:
                     current_frame = Frame()
-                    current_frame.data = []
-                    current_frame.displayTime = i
+                    current_frame.displayTime = time_metadata
                     self._frames.append(current_frame)
                 else:
                     if current_frame:
@@ -218,7 +217,7 @@ class VT100Player(object):
         for frame in self._movie.getEncFrames():
             self._movCursor += frame.displayTime
             self._onNextFrameInternal(frame, self._movCursor)
-            time.sleep(frame.displayTime // 15.0)
+            time.sleep(frame.displayTime / 15)
 
     def _onNextFrameInternal(self, frame, frame_pos):
         """
@@ -302,6 +301,7 @@ def runStdOut(filename):
     """
 
     sys.stdout.write(VT100Codes.CLEARSCRN)
+
     movie = Movie()
     movie.loadMovie(filename)
     player = VT100Player(movie)
