@@ -62,18 +62,23 @@ class VT100Codes(object):
     CLEARSCRN = ESC + "[2J"  # Clear entire screen
     CLEARDOWN = ESC + "[J"  # Clear screen from cursor down
 
-    def JMPXY(self, intX, intY):
+    def JMPXY(self, x, y):
         """
-            static method!
-            Send VT100 commands: goto position X,Y
-            @param intX: x coordinate (starting at 1)
-            @param intY: y coordinate (starting at 1)
-            @return: the VT100 code as a string
+        Send VT100 commands: goto position X,Y
+
+        Args:
+            x (int): x coordinate (starting at 1)
+            y (int): y coordinate (starting at 1)
+
+        Returns:
+            str: the VT100 code as a string
+
         """
-        if not (intX < 0 or intX > MAXDIM[0] or intY < 0 or intY > MAXDIM[1]):
-            return VT100Codes.ESC + "[" + str(intY) + ";" + str(intX) + "H"
+        if 0 >= x > MAXDIM[0] or 0 >= y > MAXDIM[1]:
+            sys.stderr.write("Warning, coordinates out of range. ({}, {})\n".format(x, y))
+            return
         else:
-            sys.stderr.write("Warning, coordinates out of range. (%d,%d)\n" % (intX, intY))
+            return self.ESC + "[{0};{1}H".format(y, x)
 
 
 class Frame(object):
@@ -105,7 +110,7 @@ class Movie(object):
         f.data.append("No movie yet loaded.")
         self.__frames.append(f)
 
-    def loadMovie(self, fileName):
+    def loadMovie(self, filepath):
         """
             Loads the ASCII movie from given text file.
             Using an encoded format, described on
@@ -120,36 +125,36 @@ class Movie(object):
         if self.__loaded:
             # we don't want to be loaded twice.
             return False
-        f = open(fileName, "r")
         self.__frames = []
-        currentFrame = None
-        counter = 0
-        maxLinesPerFrame = self.dimension[1] + 1  # incl. meta data (time information)
-        maxWidth = self.dimension[0]
-        for l in f.readlines():
-            i = -1
-            if ((counter % maxLinesPerFrame) == 0):
-                try:
-                    i = int(l[0:3])
-                except:
-                    i = -1
-            if (len(l.strip()) <= 3) and (i > 0) and (i <= 999):
-                currentFrame = Frame()
-                currentFrame.data = []
-                currentFrame.displayTime = i
-                self.__frames.append(currentFrame)
-            else:
-                if currentFrame:
-                    # first strip every white character from the right
-                    l = l.rstrip()
-                    # second fill them with blanks, that they later
-                    # automatically clear old lines from screen
-                    l = l.ljust(maxWidth)
-                    # to center the frame on the screen, we also add some
-                    # BLANKs on the left side
-                    l = l.rjust(maxWidth + (MAXDIM[0] - maxWidth) / 2)
-                    currentFrame.data.append(l)
-            counter += 1
+        current_frame = None
+        max_lines_per_frame = self.dimension[1] + 1  # incl. meta data (time information)
+        max_width = self.dimension[0]
+
+        with open(filepath) as f:
+            for counter, line in enumerate(f):
+                i = -1
+                if (counter % max_lines_per_frame) == 0:
+                    try:
+                        i = int(line[0:3])
+                    except Exception as e:
+                        print(e)
+                        i = -1
+                if len(line.strip()) <= 3 and 0 < i <= 999:
+                    current_frame = Frame()
+                    current_frame.data = []
+                    current_frame.displayTime = i
+                    self.__frames.append(current_frame)
+                else:
+                    if current_frame:
+                        # first strip every white character from the right
+                        line = line.rstrip()
+                        # second fill them with blanks, that they later
+                        # automatically clear old lines from screen
+                        line = line.ljust(max_width)
+                        # to center the frame on the screen, we also add some
+                        # BLANKs on the left side
+                        line = line.rjust(max_width + (MAXDIM[0] - max_width) / 2)
+                        current_frame.data.append(line)
         self.__loaded = True
         return True
 
@@ -176,13 +181,14 @@ class TelnetRequestHandler(SocketServer.StreamRequestHandler):
         player.onNextFrame = self.onNextFrame
         player.play()
 
-    def onNextFrame(self, screenBuffer):
+    def onNextFrame(self, screen_buffer):
         """
             Gets the current screen buffer and writes it to the socket.
         """
         try:
-            self.wfile.write(screenBuffer.read())
-        except:
+            self.wfile.write(screen_buffer.read())
+        except Exception as e:
+            print(e)
             pass  # we ignore, when an IO error occurs ... the movie is over then ;-)
 
 
@@ -193,7 +199,6 @@ class VT100Player(object):
         position.
         It exposes the all frame numbers in real values. Therefore not encoded.
     """
-    # __TIMEBAR = " <" + "".join("." for i in range(MAXDIM[0]-4)) + ">"
     __TIMEBAR = " <" + "".ljust(MAXDIM[0] - 4) + ">"
 
     def __init__(self, movie):
@@ -218,12 +223,12 @@ class VT100Player(object):
             self.__onNextFrameInternal(frame, self.__movCursor)
             time.sleep(frame.displayTime / 15.0)
 
-    def __onNextFrameInternal(self, frame, framePos):
+    def __onNextFrameInternal(self, frame, frame_pos):
         """
             internal event, happen when next frame should be drawn
         """
         screenbuf = StringIO()
-        if framePos <= 1:
+        if frame_pos <= 1:
             screenbuf.write(VT100Codes.CLEARSCRN)
         # center vertical, with respect to the time bar
         y = (MAXDIM[1] - 1 - self.__movie.dimension[1]) / 2
@@ -231,7 +236,7 @@ class VT100Player(object):
         screenbuf.write(VT100Codes().JMPXY(1, y))  # self.__sendJMPXY(1, y);
         for line in frame.data:
             screenbuf.write(line + "\r\n")
-        self._updateTimeBar(screenbuf, framePos, self.__maxFrames)
+        self._updateTimeBar(screenbuf, frame_pos, self.__maxFrames)
         # now rewind the internal buffer and fire the public event
         screenbuf.seek(0)
         self.onNextFrame(screenbuf)
@@ -273,12 +278,12 @@ def runTcpServer(interface, port, filename):
     server = SocketServer.ThreadingTCPServer((interface, port), TelnetRequestHandler)
     try:
         server.serve_forever()
-    except:
-        pass  # if some one cancels the player, we don't care
+    except Exception as e:
+        print(e)
 
 
-def onNextFrameStdOut(screenBuffer):
-    sys.stdout.write(screenBuffer.read())
+def onNextFrameStdOut(screen_buffer):
+    sys.stdout.write(screen_buffer.read())
 
 
 def runStdOut(filename):
@@ -291,7 +296,8 @@ def runStdOut(filename):
     player.onNextFrame = onNextFrameStdOut
     try:
         player.play()
-    except:
+    except Exception as e:
+        print(e)
         pass  # if some one cancels the player, we don't care
 
 
