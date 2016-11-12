@@ -26,15 +26,12 @@
 #  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 #  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-from __future__ import print_function
-
 """
   ASCII art movie Telnet player.
   Version         : 0.1
 
   Can stream an ~20 minutes ASCII movie via Telnet emulation
-  as stand alone server or via xinetd daemon. 
+  as stand alone server or via xinetd daemon.
   Tested with Python 2.3, Python 2.5, Python 2.7
 
   Original art work : Simon Jansen ( http://www.asciimation.co.nz/ )
@@ -42,12 +39,20 @@ from __future__ import print_function
   & Player coding   : Martin W. Kirst ( https://github.com/nitram509/ascii-telnet-server )
 """
 
+from __future__ import print_function, division
+
+import os
 import sys
 import time
-import SocketServer
-import os.path
-from StringIO import StringIO
+from io import BytesIO
 from optparse import OptionParser
+
+try:
+    # noinspection PyCompatibility
+    from socketserver import StreamRequestHandler, ThreadingTCPServer
+except ImportError:  # Py2
+    # noinspection PyCompatibility,PyUnresolvedReferences
+    from SocketServer import StreamRequestHandler, ThreadingTCPServer
 
 MAXDIM = (80, 24)  # maximum dimension of the VT100 terminal
 
@@ -78,7 +83,7 @@ class VT100Codes(object):
             sys.stderr.write("Warning, coordinates out of range. ({}, {})\n".format(x, y))
             return
         else:
-            return self.ESC + "[{0};{1}H".format(y, x)
+            return (self.ESC + "[{0};{1}H".format(y, x)).encode()
 
 
 class Frame(object):
@@ -103,12 +108,12 @@ class Movie(object):
     """
 
     def __init__(self):
-        self.__frames = []
-        self.__loaded = False
+        self._frames = []
+        self._loaded = False
         self.dimension = (67, 13)
         f = Frame()
         f.data.append("No movie yet loaded.")
-        self.__frames.append(f)
+        self._frames.append(f)
 
     def loadMovie(self, filepath):
         """
@@ -122,10 +127,10 @@ class Movie(object):
             13 lines effective movie size,
             15 frames per second,
         """
-        if self.__loaded:
+        if self._loaded:
             # we don't want to be loaded twice.
             return False
-        self.__frames = []
+        self._frames = []
         current_frame = None
         max_lines_per_frame = self.dimension[1] + 1  # incl. meta data (time information)
         max_width = self.dimension[0]
@@ -143,7 +148,7 @@ class Movie(object):
                     current_frame = Frame()
                     current_frame.data = []
                     current_frame.displayTime = i
-                    self.__frames.append(current_frame)
+                    self._frames.append(current_frame)
                 else:
                     if current_frame:
                         # first strip every white character from the right
@@ -153,9 +158,9 @@ class Movie(object):
                         line = line.ljust(max_width)
                         # to center the frame on the screen, we also add some
                         # BLANKs on the left side
-                        line = line.rjust(max_width + (MAXDIM[0] - max_width) / 2)
+                        line = line.rjust(max_width + (MAXDIM[0] - max_width) // 2)
                         current_frame.data.append(line)
-        self.__loaded = True
+        self._loaded = True
         return True
 
     def getEncFrames(self):
@@ -163,10 +168,10 @@ class Movie(object):
             return a list with frames.
             Each frame carries its own display time, thats why it's 'encoded'.
         """
-        return self.__frames
+        return self._frames
 
 
-class TelnetRequestHandler(SocketServer.StreamRequestHandler):
+class TelnetRequestHandler(StreamRequestHandler):
     """
         Request handler used for multi threaded TCP server
         @see: SocketServer.StreamRequestHandler
@@ -185,11 +190,8 @@ class TelnetRequestHandler(SocketServer.StreamRequestHandler):
         """
             Gets the current screen buffer and writes it to the socket.
         """
-        try:
-            self.wfile.write(screen_buffer.read())
-        except Exception as e:
-            print(e)
-            pass  # we ignore, when an IO error occurs ... the movie is over then ;-)
+        self.wfile.write(screen_buffer.read())
+
 
 
 class VT100Player(object):
@@ -199,106 +201,118 @@ class VT100Player(object):
         position.
         It exposes the all frame numbers in real values. Therefore not encoded.
     """
-    __TIMEBAR = " <" + "".ljust(MAXDIM[0] - 4) + ">"
+    _TIMEBAR = " <" + " " * (MAXDIM[0] - 4) + ">"
 
     def __init__(self, movie):
-        self.__movie = movie
-        self.__movCursor = 0  # virtual cursor pointing to the current frame
-        self.__maxFrames = 0
-        for f in self.__movie.getEncFrames():
-            self.__maxFrames += f.displayTime
+        self._movie = movie
+        self._movCursor = 0  # virtual cursor pointing to the current frame
+        self._maxFrames = 0
+        for f in self._movie.getEncFrames():
+            self._maxFrames += f.displayTime
 
     def getDuration(self):
         """
             return the number of seconds this movie is playing
         """
-        return self.__maxFrames / 15  # 15 frames per second
+        return self._maxFrames // 15  # 15 frames per second
 
     def play(self):
         """
             plays the movie
         """
-        for frame in self.__movie.getEncFrames():
-            self.__movCursor += frame.displayTime
-            self.__onNextFrameInternal(frame, self.__movCursor)
-            time.sleep(frame.displayTime / 15.0)
+        for frame in self._movie.getEncFrames():
+            self._movCursor += frame.displayTime
+            self._onNextFrameInternal(frame, self._movCursor)
+            time.sleep(frame.displayTime // 15.0)
 
-    def __onNextFrameInternal(self, frame, frame_pos):
+    def _onNextFrameInternal(self, frame, frame_pos):
         """
             internal event, happen when next frame should be drawn
         """
-        screenbuf = StringIO()
+        screenbuf = BytesIO()
         if frame_pos <= 1:
             screenbuf.write(VT100Codes.CLEARSCRN)
         # center vertical, with respect to the time bar
-        y = (MAXDIM[1] - 1 - self.__movie.dimension[1]) / 2
+        y = (MAXDIM[1] - 1 - self._movie.dimension[1]) // 2
 
-        screenbuf.write(VT100Codes().JMPXY(1, y))  # self.__sendJMPXY(1, y);
+        screenbuf.write(VT100Codes().JMPXY(1, y))
         for line in frame.data:
-            screenbuf.write(line + "\r\n")
-        self._updateTimeBar(screenbuf, frame_pos, self.__maxFrames)
+            screenbuf.write((line + "\r\n").encode())
+        self._updateTimeBar(screenbuf, frame_pos, self._maxFrames)
         # now rewind the internal buffer and fire the public event
         screenbuf.seek(0)
         self.onNextFrame(screenbuf)
 
-    def onNextFrame(self, screenBuffer):
+    def onNextFrame(self, screen_buffer):
         """
-            Public event method, which can be used to get new Screens.
+        Public event method, which can be used to get new Screens.
 
-            @param screenBuffer: its a file like object containing the VT100 screen buffer
+        Args:
+            screen_buffer:  its a file like object containing the VT100 screen buffer
+
+        Returns:
+
         """
         pass
 
-    def _updateTimeBar(self, screenBuffer, intCurrentValue, intMaxSize=10):
+    def _updateTimeBar(self, screen_buffer, current_value, max_size=10):
         """
             Writes at the bottom of the screen a line like this
             <.......o.....................>
             Left and right are one blank spaces from the max screen dimensions
             It should visualize a timeline with 'o' is the current position.
 
-            @param screenBuffer: file like object, where the data is written to
-            @param intCurrentValue: current value
-            @param intMaxSize: maximum value
+        Args:
+            screen_buffer: file like object, where the data is written to
+            current_value: current value
+            max_size: maximum value
+
+        Returns:
+
         """
-        screenBuffer.write(VT100Codes().JMPXY(1, MAXDIM[1]))  # self.__sendJMPXY(1,MAXDIM[1])
-        screenBuffer.write(self.__TIMEBAR)  # self.wfile.write(self.__TIMEBAR)
+        screen_buffer.write(VT100Codes().JMPXY(1, MAXDIM[1]))
+        screen_buffer.write(self._TIMEBAR.encode())  #
         # now some weird calculations incl. some tricks to avoid rounding errors.
-        x = min((((intCurrentValue) * (MAXDIM[0] - 4)) / (intMaxSize - 1)), (MAXDIM[0] - 4 - 1))
-        screenBuffer.write(VT100Codes().JMPXY(x + 3, MAXDIM[1]))  # self.__sendJMPXY(x+3,MAXDIM[1])
-        screenBuffer.write("o")
+        x = min(((current_value * (MAXDIM[0] - 4)) // (max_size - 1)), (MAXDIM[0] - 4 - 1))
+        screen_buffer.write(VT100Codes().JMPXY(x + 3, MAXDIM[1]))
+        screen_buffer.write(b"o")
 
 
 def runTcpServer(interface, port, filename):
     """
-        @param interface: bind to this interface
-        @param port: bind to this port
-        @param filename: file name of the ASCII movie
+    Args:
+        interface:  bind to this interface
+        port: bind to this port
+        filename: file name of the ASCII movie
+
+    Returns:
+
     """
     TelnetRequestHandler.filename = filename
-    server = SocketServer.ThreadingTCPServer((interface, port), TelnetRequestHandler)
-    try:
-        server.serve_forever()
-    except Exception as e:
-        print(e)
+    server = ThreadingTCPServer((interface, port), TelnetRequestHandler)
+    server.serve_forever()
+
 
 
 def onNextFrameStdOut(screen_buffer):
-    sys.stdout.write(screen_buffer.read())
+    sys.stdout.write(screen_buffer.read().decode('iso-8859-15'))
 
 
 def runStdOut(filename):
     """
-        @param filename: file name of the ASCII movie
+    Args:
+        filename: file name of the ASCII movie
+
+    Returns:
+
     """
+
+    sys.stdout.write(VT100Codes.CLEARSCRN)
     movie = Movie()
     movie.loadMovie(filename)
     player = VT100Player(movie)
     player.onNextFrame = onNextFrameStdOut
-    try:
-        player.play()
-    except Exception as e:
-        print(e)
-        pass  # if some one cancels the player, we don't care
+    player.play()
 
 
 ########
