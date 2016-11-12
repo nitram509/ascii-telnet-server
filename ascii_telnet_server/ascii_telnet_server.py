@@ -49,10 +49,10 @@ from optparse import OptionParser
 
 try:
     # noinspection PyCompatibility
-    from socketserver import StreamRequestHandler, ThreadingTCPServer
+    from socketserver import StreamRequestHandler, ThreadingMixIn, TCPServer
 except ImportError:  # Py2
     # noinspection PyCompatibility,PyUnresolvedReferences
-    from SocketServer import StreamRequestHandler, ThreadingTCPServer
+    from SocketServer import StreamRequestHandler, ThreadingMixIn, TCPServer
 
 MAXDIM = (80, 24)  # maximum dimension of the VT100 terminal
 
@@ -276,6 +276,10 @@ class VT100Player(object):
         return min((current_frame_pos * (MAXDIM[0] - 4)) // (max_size - 1), (MAXDIM[0] - 4 - 1))
 
 
+class ThreadedTCPServer(ThreadingMixIn, TCPServer):
+    daemon_threads = True
+
+
 def runTcpServer(interface, port, filename):
     """
     Args:
@@ -287,7 +291,7 @@ def runTcpServer(interface, port, filename):
 
     """
     TelnetRequestHandler.filename = filename
-    server = ThreadingTCPServer((interface, port), TelnetRequestHandler)
+    server = ThreadedTCPServer((interface, port), TelnetRequestHandler)
     server.serve_forever()
 
 
