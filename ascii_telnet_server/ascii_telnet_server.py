@@ -39,7 +39,7 @@
   & Player coding   : Martin W. Kirst ( https://github.com/nitram509/ascii-telnet-server )
 """
 
-from __future__ import print_function, division
+from __future__ import division, print_function
 
 import os
 import sys
@@ -139,11 +139,7 @@ class Movie(object):
             for counter, line in enumerate(f):
                 i = -1
                 if (counter % max_lines_per_frame) == 0:
-                    try:
-                        i = int(line[0:3])
-                    except Exception as e:
-                        print(e)
-                        i = -1
+                    i = int(line[0:3])
                 if len(line.strip()) <= 3 and 0 < i <= 999:
                     current_frame = Frame()
                     current_frame.data = []
@@ -191,7 +187,6 @@ class TelnetRequestHandler(StreamRequestHandler):
             Gets the current screen buffer and writes it to the socket.
         """
         self.wfile.write(screen_buffer.read())
-
 
 
 class VT100Player(object):
@@ -291,7 +286,6 @@ def runTcpServer(interface, port, filename):
     TelnetRequestHandler.filename = filename
     server = ThreadingTCPServer((interface, port), TelnetRequestHandler)
     server.serve_forever()
-
 
 
 def onNextFrameStdOut(screen_buffer):
