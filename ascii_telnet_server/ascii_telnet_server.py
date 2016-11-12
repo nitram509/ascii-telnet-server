@@ -249,7 +249,7 @@ class VT100Player(object):
         """
         pass
 
-    def _updateTimeBar(self, screen_buffer, current_value, max_size=10):
+    def _updateTimeBar(self, screen_buffer, current_frame_pos, max_size=10):
         """
             Writes at the bottom of the screen a line like this
             <.......o.....................>
@@ -258,7 +258,7 @@ class VT100Player(object):
 
         Args:
             screen_buffer: file like object, where the data is written to
-            current_value: current value
+            current_frame_pos: current cursor position on frame
             max_size: maximum value
 
         Returns:
@@ -267,9 +267,13 @@ class VT100Player(object):
         screen_buffer.write(VT100Codes().JMPXY(1, MAXDIM[1]))
         screen_buffer.write(self._TIMEBAR.encode())  #
         # now some weird calculations incl. some tricks to avoid rounding errors.
-        x = min(((current_value * (MAXDIM[0] - 4)) // (max_size - 1)), (MAXDIM[0] - 4 - 1))
+        x = self._get_timebar_marker_position(current_frame_pos, max_size)
         screen_buffer.write(VT100Codes().JMPXY(x + 3, MAXDIM[1]))
         screen_buffer.write(b"o")
+
+    @staticmethod
+    def _get_timebar_marker_position(current_frame_pos, max_size):
+        return min((current_frame_pos * (MAXDIM[0] - 4)) // (max_size - 1), (MAXDIM[0] - 4 - 1))
 
 
 def runTcpServer(interface, port, filename):
