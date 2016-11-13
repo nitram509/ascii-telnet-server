@@ -45,9 +45,9 @@ import os
 import sys
 from optparse import OptionParser
 
-from ascii_telnet_server.ascii_movie import Movie
-from ascii_telnet_server.ascii_player import VT100Player
-from ascii_telnet_server.ascii_server import TelnetRequestHandler, ThreadedTCPServer
+from ascii_telnet.ascii_movie import Movie
+from ascii_telnet.ascii_player import VT100Player
+from ascii_telnet.ascii_server import TelnetRequestHandler, ThreadedTCPServer
 
 
 def runTcpServer(interface, port, filename):

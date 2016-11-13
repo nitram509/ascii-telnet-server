@@ -1,7 +1,7 @@
 # coding=utf-8
 import pytest
 
-from ascii_telnet_server.ascii_movie import TimeBar
+from ascii_telnet.ascii_movie import TimeBar
 
 
 class TestTimeBar(object):

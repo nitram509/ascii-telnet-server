@@ -30,7 +30,7 @@ import sys
 import time
 from io import BytesIO
 
-from ascii_telnet_server.ascii_movie import TimeBar
+from ascii_telnet.ascii_movie import TimeBar
 
 
 class VT100Player(object):
@@ -78,7 +78,6 @@ class VT100Player(object):
             self._movCursor += frame.displayTime
             self._onNextFrameInternal(frame, self._movCursor)
             time.sleep(frame.displayTime / 15)
-            print("Frame sent.")
 
     def stop(self):
         self._stopped = True

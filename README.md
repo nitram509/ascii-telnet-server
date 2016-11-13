@@ -16,6 +16,7 @@ Tested with Python 2.6+, Python 3.5+
 
 Original art work : Simon Jansen [http://www.asciimation.co.nz/](http://www.asciimation.co.nz/)  
 Telnetification & Player coding : Martin W. Kirst
+Python3 Update: Ryan Jarvis
 
 Command line parameters
 -----------------------
@@ -72,6 +73,3 @@ place this configuration into `/etc/xinetd.d/telnet`:
             server          = /usr/bin/python
             server_args     = -u -OO /opt/asciiplayer/ascii_telnet_server.py -f /opt/asciiplayer/sw1.txt --stdout
     }
-
-
-If you like this project, endorse please [![endorse](https://api.coderwall.com/nitram509/endorsecount.png)](https://coderwall.com/nitram509)

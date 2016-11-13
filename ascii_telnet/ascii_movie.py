@@ -121,15 +121,15 @@ class Movie(object):
     A movie only can be loaded once. A second try will fail.
     """
 
-    def __init__(self, maxX, maxY):
+    def __init__(self, max_x, max_y):
         self._frames = []
         self._loaded = False
         self.dimension = (67, 13)
         f = Frame()
         f.data.append("No movie yet loaded.")
         self._frames.append(f)
-        self.maxX = maxX
-        self.maxY = maxY
+        self.max_x = max_x
+        self.max_y = max_y
 
     def loadMovie(self, filepath):
         """
@@ -169,7 +169,7 @@ class Movie(object):
                         line = line.ljust(max_width)
                         # to center the frame on the screen, we also add some
                         # BLANKs on the left side
-                        line = line.rjust(max_width + (self.maxX - max_width) // 2)
+                        line = line.rjust(max_width + (self.max_x - max_width) // 2)
                         current_frame.data.append(line)
         self._loaded = True
         return True

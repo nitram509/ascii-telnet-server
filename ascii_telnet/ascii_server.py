@@ -29,8 +29,8 @@ from __future__ import division, print_function
 import errno
 import socket
 
-from ascii_telnet_server.ascii_movie import Movie
-from ascii_telnet_server.ascii_player import VT100Player
+from ascii_telnet.ascii_movie import Movie
+from ascii_telnet.ascii_player import VT100Player
 
 try:
     # noinspection PyCompatibility
