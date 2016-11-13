@@ -1,7 +1,7 @@
 # coding=utf-8
 import pytest
 
-from ascii_telnet_server.ascii_telnet_server import TimeBar
+from ascii_telnet_server.ascii_movie import TimeBar
 
 
 class TestTimeBar(object):
@@ -113,5 +113,3 @@ class TestTimeBar(object):
         bad_frame_timebar = tb.get_timebar(104)
         assert len(bad_frame_timebar) == 102
         assert bad_frame_timebar == "<                                                                                                   o>"
-
-
