@@ -57,6 +57,8 @@ class VT100Player(object):
 
         self._stopped = False
 
+        self._clear_screen_setup_done = False
+
         for f in self._movie.getEncFrames():
             self._maxFrames += f.displayTime
 
@@ -87,8 +89,9 @@ class VT100Player(object):
         internal event, happen when next frame should be drawn
         """
         screenbuf = BytesIO()
-        if frame_pos <= 1:
-            screenbuf.write(self.CLEARSCRN)
+        if not self._clear_screen_setup_done:
+            screenbuf.write(self.CLEARSCRN.encode())
+            self._clear_screen_setup_done = True
         # center vertical, with respect to the time bar
         y = (self._movie.max_y - self._movie.dimension[1] - self.timebar.height) // 2
 
