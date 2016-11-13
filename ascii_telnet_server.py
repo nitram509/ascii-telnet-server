@@ -112,7 +112,7 @@ if __name__ == "__main__":
                         port=23,
                         tcpserv=True,
                         verbose=True, )
-    (options, args) = parser.parse_args()
+    options = parser.parse_args()[0]
 
     if not (options.filename and os.path.exists(options.filename)):
         parser.exit(1, "Error, file not found! See --help for details.\n")
