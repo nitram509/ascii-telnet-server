@@ -6,7 +6,7 @@ as stand alone server or via xinetd daemon.
 
 Screenshot:
 
-![Sample screenshot using famous Putty as Telnet client](screenshots/sample_using_putty.png?raw=true)
+![Sample screenshot](screenshots/example.gif?raw=true)
 
 
 Wanna see it in action? Just watch http://asciinema.org/a/3132
