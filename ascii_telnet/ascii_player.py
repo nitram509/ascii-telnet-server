@@ -60,7 +60,7 @@ class VT100Player(object):
         for f in self._movie.getEncFrames():
             self._maxFrames += f.displayTime
 
-        self.timebar = TimeBar(self._maxFrames, self._movie.maxX)
+        self.timebar = TimeBar(self._maxFrames, self._movie.max_x)
 
     def getDuration(self):
         """
@@ -90,7 +90,7 @@ class VT100Player(object):
         if frame_pos <= 1:
             screenbuf.write(self.CLEARSCRN)
         # center vertical, with respect to the time bar
-        y = (self._movie.maxY - self._movie.dimension[1] - self.timebar.height) // 2
+        y = (self._movie.max_y - self._movie.dimension[1] - self.timebar.height) // 2
 
         screenbuf.write(self._move_cursor(1, y))
         for line in frame.data:
@@ -127,7 +127,7 @@ class VT100Player(object):
         Returns:
 
         """
-        screen_buffer.write(self._move_cursor(1, self._movie.maxY))
+        screen_buffer.write(self._move_cursor(1, self._movie.max_y))
         screen_buffer.write(self.timebar.get_timebar(current_frame_pos).encode())
 
     def _move_cursor(self, x, y):
@@ -142,7 +142,7 @@ class VT100Player(object):
             str: the VT100 code as a string
 
         """
-        if 0 >= x > self._movie.maxX or 0 >= y > self._movie.maxY:
+        if 0 >= x > self._movie.max_x or 0 >= y > self._movie.max_y:
             sys.stderr.write("Warning, coordinates out of range. ({}, {})\n".format(x, y))
             return
         else:
