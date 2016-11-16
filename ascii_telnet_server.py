@@ -38,6 +38,8 @@
   Original art work : Simon Jansen ( http://www.asciimation.co.nz/ )
   Telnetification
   & Player coding   : Martin W. Kirst ( https://github.com/nitram509/ascii-telnet-server )
+  Python3 Update: Ryan Jarvis
+
 """
 from __future__ import division, print_function
 
@@ -52,37 +54,33 @@ from ascii_telnet.ascii_server import TelnetRequestHandler, ThreadedTCPServer
 
 def runTcpServer(interface, port, filename):
     """
+    Start a TCP server that a client can connect to that streams the output of
+     Ascii Player
+
     Args:
-        interface:  bind to this interface
-        port: bind to this port
-        filename: file name of the ASCII movie
-
-    Returns:
-
+        interface (str):  bind to this interface
+        port (int): bind to this port
+        filename (str): file name of the ASCII movie
     """
     TelnetRequestHandler.filename = filename
     server = ThreadedTCPServer((interface, port), TelnetRequestHandler)
     server.serve_forever()
 
 
-def onNextFrameStdOut(screen_buffer):
-    sys.stdout.write(screen_buffer.read().decode('iso-8859-15'))
-
-
-def runStdOut(filename):
+def runStdOut(filepath):
     """
+    Stream the output of the Ascii Player to STDOUT
     Args:
-        filename: file name of the ASCII movie
-
-    Returns:
-
+        filepath (str): file path of the ASCII movie
     """
 
-    movie = Movie(80, 24)
-    movie.loadMovie(filename)
+    def draw_frame_to_stdout(screen_buffer):
+        sys.stdout.write(screen_buffer.read().decode('iso-8859-15'))
+
+    movie = Movie()
+    movie.load(filepath)
     player = VT100Player(movie)
-    sys.stdout.write(player.CLEARSCRN)
-    player.onNextFrame = onNextFrameStdOut
+    player.draw_frame = draw_frame_to_stdout
     player.play()
 
 
@@ -117,12 +115,13 @@ if __name__ == "__main__":
     if not (options.filename and os.path.exists(options.filename)):
         parser.exit(1, "Error, file not found! See --help for details.\n")
 
-    if options.tcpserv:
-        if options.verbose:
-            print("Running TCP server on {0}:{1}".format(options.interface, options.port))
-            print("Playing movie {0}".format(options.filename))
-        runTcpServer(options.interface, options.port, options.filename)
-    else:
-        runStdOut(options.filename)
-
-    sys.exit(0)
+    try:
+        if options.tcpserv:
+            if options.verbose:
+                print("Running TCP server on {0}:{1}".format(options.interface, options.port))
+                print("Playing movie {0}".format(options.filename))
+            runTcpServer(options.interface, options.port, options.filename)
+        else:
+            runStdOut(options.filename)
+    except KeyboardInterrupt:
+        print("Ascii Player Quit.")

@@ -29,36 +29,36 @@ from __future__ import division, print_function
 
 
 class Frame(object):
-    """
-    One frame is 67 columns and 13 rows in effective size on screen.
-    Use 'displayTime' to get the frame cycles this specific frame should
-    be displayed.
-    Use 'data' to get the 13 lines.
-    """
+    def __init__(self, display_time=1):
+        """
+        One frame is typically 67 columns and 13 rows in effective size on screen.
 
-    def __init__(self):
-        self.displayTime = 1  # number of frame cycles to display this frame, default 1
-        self.data = []  # 13 lines
+        Use 'data' to get the lines.
+
+        Args:
+            display_time (int): the frame cycles this specific frame should be
+                                 displayed (15 cycles per second).
+        """
+        self.display_time = display_time
+        self.data = []  # frame lines
 
 
 class TimeBar(object):
-    """
-    TimeBar that appears at the bottom of the screen.
-    """
+    height = 1
 
     def __init__(self, duration, length, left_decorator="<", spacer=" ", right_decorator=">", marker="o"):
         """
+        TimeBar that appears at the bottom of the screen.
 
         Args:
             duration (int): Frame count that this bar will be tracking
             length (int): Length in characters that the TimeBar will be on the screen
-            left_decorator:
-            spacer:
-            right_decorator:
-            marker:
+            left_decorator (str): Decorator on the left side
+            spacer (str): Spacer in between left and right decorators
+            right_decorator (str): Decorator on the right side
+            marker (str): Marker for position in Ascii Movie
         """
         self.length = length
-        self.height = 1
 
         self.duration = duration
 
@@ -70,7 +70,7 @@ class TimeBar(object):
         self.internal_length = self.length - len(self.left_decorator) - len(self.right_decorator)
 
         if len(self.left_decorator + self.right_decorator + self.marker) > self.length:
-            raise ValueError("This TimeBar is too short for these decorators: {} {} {}".format(self.left_decorator,
+            raise ValueError("This TimeBar is too short for these decorators: {0} {1} {2}".format(self.left_decorator,
                                                                                                self.marker,
                                                                                                self.right_decorator))
 
@@ -114,69 +114,73 @@ class TimeBar(object):
 
 
 class Movie(object):
-    """
-    A movie consists of frames and is empty by default.
-    Movies are loaded from text files.
-    Use 'dimension' to get the dimension of the movie.
-    A movie only can be loaded once. A second try will fail.
-    """
+    def __init__(self, width=80, height=24):
+        """
+        A Movie object consists of frames and is empty by default.
+        Movies are loaded from text files.
+        A movie only can be loaded once. A second try will fail.
 
-    def __init__(self, max_x, max_y):
-        self._frames = []
+        Args:
+            width (int): Movie screen width.
+            height (int): Movie screen height
+        """
+        self.frames = []
         self._loaded = False
-        self.dimension = (67, 13)
+
+        self._frame_width = 67
+        self._frame_height = 13
+
         f = Frame()
         f.data.append("No movie yet loaded.")
-        self._frames.append(f)
-        self.max_x = max_x
-        self.max_y = max_y
+        self.frames.append(f)
 
-    def loadMovie(self, filepath):
+        self.screen_width = width
+        self.screen_height = height
+
+        self.left_margin = (self.screen_width - self._frame_width) // 2
+        self.top_margin = (self.screen_height - self._frame_height - TimeBar.height) // 2
+
+    def load(self, filepath):
         """
         Loads the ASCII movie from given text file.
         Using an encoded format, described on
         http://www.asciimation.co.nz/asciimation/ascii_faq.html
         In short:
-        67x14 chars,
-        lines separated with 0x0a,
-        first line is a number telling delay in number of frames,
-        13 lines effective movie size,
-        15 frames per second,
+            67x14 chars
+            lines separated with \n
+            first line is a number telling delay in number of frames
+            13 lines effective frame size
+            15 frames per second
+
+        Args:
+            filepath (str): Path to Ascii Movie Data
         """
         if self._loaded:
             # we don't want to be loaded twice.
             return False
-        self._frames = []
+        self.frames = []
         current_frame = None
-        max_lines_per_frame = self.dimension[1] + 1  # incl. meta data (time information)
-        max_width = self.dimension[0]
+        lines_per_frame = self._frame_height + TimeBar.height  # incl. meta data (time information)
 
         with open(filepath) as f:
-            for counter, line in enumerate(f):
-                time_metadata = -1
-                if (counter % max_lines_per_frame) == 0:
-                    time_metadata = int(line[0:3])
-                if 0 < time_metadata <= 999:
-                    current_frame = Frame()
-                    current_frame.displayTime = time_metadata
-                    self._frames.append(current_frame)
+            for line_num, line in enumerate(f):
+                time_metadata = None
+
+                if line_num % lines_per_frame == 0:
+                    time_metadata = int(line.strip())
+
+                if time_metadata is not None:
+                    current_frame = Frame(display_time=time_metadata)
+                    self.frames.append(current_frame)
                 else:
-                    if current_frame:
-                        # first strip every white character from the right
-                        line = line.rstrip()
-                        # second fill them with blanks, that they later
-                        # automatically clear old lines from screen
-                        line = line.ljust(max_width)
-                        # to center the frame on the screen, we also add some
-                        # BLANKs on the left side
-                        line = line.rjust(max_width + (self.max_x - max_width) // 2)
-                        current_frame.data.append(line)
+                    # First strip every white character from the right
+                    # The amount of white space can be variable
+                    line = line.rstrip()
+                    # Second fill line out with blanks so that any previous
+                    # characters are overwritten
+                    line = line.ljust(self._frame_width)
+                    # Third center the frame on the screen
+                    line = line.rjust(self.left_margin + self._frame_width)
+                    current_frame.data.append(line)
         self._loaded = True
         return True
-
-    def getEncFrames(self):
-        """
-        return a list with frames.
-        Each frame carries its own display time, thats why it's 'encoded'.
-        """
-        return self._frames
