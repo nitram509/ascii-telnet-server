@@ -46,7 +46,7 @@ class Frame(object):
 class TimeBar(object):
     height = 1
 
-    def __init__(self, duration, length, left_decorator="<", spacer=" ", right_decorator=">", marker="o"):
+    def __init__(self, duration, length, left_decorator=u"<", spacer=u" ", right_decorator=u">", marker=u"o"):
         """
         TimeBar that appears at the bottom of the screen.
 
@@ -76,9 +76,9 @@ class TimeBar(object):
 
     @property
     def _empty_timebar(self):
-        time_bar_internals = "{0:{spacer}>{length}}".format("", spacer=self.spacer, length=self.internal_length)
+        time_bar_internals = u"{0:{spacer}>{length}}".format(u"", spacer=self.spacer, length=self.internal_length)
 
-        return "{tb.left_decorator}{internals}{tb.right_decorator}".format(internals=time_bar_internals, tb=self)
+        return u"{tb.left_decorator}{internals}{tb.right_decorator}".format(internals=time_bar_internals, tb=self)
 
     def get_marker_postion(self, frame_num):
         """

@@ -25,8 +25,9 @@ class TestTimeBar(object):
         assert tb._empty_timebar == "< >"
 
     def test_fancy_decorators(self):
-        tb = TimeBar(0, 15, left_decorator="*~~*~~", right_decorator="Œ")
-        assert tb._empty_timebar == "*~~*~~        Œ"
+        tb = TimeBar(0, 15, left_decorator=u"*~~*~~", right_decorator=u"Œ")
+        assert tb._empty_timebar == u"*~~*~~        Œ"
+        assert len(tb._empty_timebar) == 15
 
     def test_custom_spacer(self):
         tb = TimeBar(0, 15, spacer=".")
