@@ -60,6 +60,7 @@ Temporary Items
 
 # User-specific stuff:
 .idea/*
+*.iml
 
 # Sensitive or high-churn files:
 .idea/dataSources/
