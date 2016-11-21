@@ -53,14 +53,14 @@ class TelnetRequestHandler(StreamRequestHandler):
     filename = None  # filename is set once, so it's immutable and safe for multi threading
 
     def handle(self):
-        movie = Movie(80, 24)
-        movie.loadMovie(TelnetRequestHandler.filename)
+        movie = Movie()
+        movie.load(TelnetRequestHandler.filename)
 
         self.player = VT100Player(movie)
-        self.player.onNextFrame = self.onNextFrame
+        self.player.draw_frame = self.draw_frame
         self.player.play()
 
-    def onNextFrame(self, screen_buffer):
+    def draw_frame(self, screen_buffer):
         """
         Gets the current screen buffer and writes it to the socket.
         """
