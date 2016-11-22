@@ -8,3 +8,7 @@ python:
 install: "pip install -r dev_requirements.txt"
 # command to run tests
 script: pytest
+
+os:
+  - linux
+  - osx
