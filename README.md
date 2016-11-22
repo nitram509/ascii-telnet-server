@@ -6,7 +6,7 @@ as stand alone server or via xinetd daemon.
 
 Screenshot:
 
-![Sample screenshot](screenshots/example.gif?raw=true)
+![Sample screenshot](screenshots/example.gif?raw=true | width=100)
 
 
 Wanna see it in action? Just watch http://asciinema.org/a/3132
