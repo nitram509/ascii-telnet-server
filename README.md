@@ -47,7 +47,32 @@ Simple call this Python script by using the sample movie file:
     $> python ascii_telnet_server.py --standalone -f ../sample_movies/sw1.txt
     Running TCP server on 0.0.0.0:23
     Playing movie sw1.txt
-   
+
+Run as docker container
+-----------------------
+
+Simply build & run the container and use the movie file as environment parameter the sample movie file:
+
+    # Build image:
+    $> docker build -t ascii-art-movie-telnet-player .
+    
+    # MODE STDOUT: Run as local player
+    
+    # with the default movie
+    $> docker run -it --rm -e mode=stdout ascii-art-movie-telnet-player
+    
+    # with a custom movie file.txt (absolute path to file it's required):
+    $> docker run -it --rm -v $(pwd)/your_movie.txt:/app/input_file.txt -e input_file=input_file.txt ascii-art-movie-telnet-player
+    
+    # MODE STANDALONE: Run as local telnet server
+    # To test, open a telnet client in other terminal/session i.e. $> telnet localhost 23
+    
+    # with the default movie
+    $> docker run -it --rm -p 23:23 -e mode=standalone ascii-art-movie-telnet-player
+    
+    # Run with custon input_file.txt movie
+    $> docker run -it --rm -v $(pwd)/your_movie.txt:/app/input_file.txt -p 23:23 -e mode=standalone -e input_file=input_file.txt ascii-art-movie-telnet-player
+    
 
 Run as xinetd program
 ---------------------
