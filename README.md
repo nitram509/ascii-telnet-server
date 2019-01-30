@@ -16,6 +16,7 @@ Tested with Python 2.6+, Python 3.5+
 Original art work : Simon Jansen [http://www.asciimation.co.nz/](http://www.asciimation.co.nz/)  
 Telnetification & Player coding : Martin W. Kirst  
 Python3 Update: Ryan Jarvis
+Dockerfile contributed by: Manuel Eusebio de Paz Carmona
 
 Command line parameters
 -----------------------
