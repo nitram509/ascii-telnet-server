@@ -16,6 +16,6 @@ You can also view its copy on
     
      https://www.youtube.com/watch?v=9lNZ_Rnr7Jc
 
-The asciimationize of this video is by @ZenithalHourlyRate
+The asciimation of this video is by @ZenithalHourlyRate
 
 CC BY-NC
