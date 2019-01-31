@@ -25,6 +25,7 @@ See program output:
 
     $ python ascii_telnet_server.py --help
     Usage: ascii_telnet_server.py [options]
+
     Options:
       -h, --help            show this help message and exit
       --standalone          Run as stand alone multi threaded TCP server (default)
@@ -38,14 +39,29 @@ See program output:
       -p PORT, --port=PORT  Bind to this port (default 23, Telnet)
       -v, --verbose         Verbose (default for TCP server)
       -q, --quiet           Quiet! (default for STDIN STDOUT server)
+      -r FPS, --framerate=FPS
+                            Set the framerate of the movie(default 24)
+      -s WIDTHxHEIGHT, --size=WIDTHxHEIGHT
+                            Set the screen size of the movie(default 80x24).
+                            Including the timebar, so the maximum framesize is
+                            WIDTHx(HEIGHT-1)(default maximum 80x23)
+      -S FRAME_WIDTHxFRAME_HEIGHT, --framesize=FRAME_WIDTHxFRAME_HEIGHT
+                            Set the frame size(depending on the movie you are to
+                            play) (default 67x13)
 
+Run as stdout local player
+--------------------------
+
+Simply call this Python script by using the sample movie file:
+
+    $> python ascii_telnet_server.py --stdout -f ./sample_movies/sw1.txt
 
 Run as stand alone server
 -------------------------
 
-Simple call this Python script by using the sample movie file:
+Simply call this Python script by using the sample movie file:
 
-    $> python ascii_telnet_server.py --standalone -f ../sample_movies/sw1.txt
+    $> python ascii_telnet_server.py --standalone -f ./sample_movies/sw1.txt
     Running TCP server on 0.0.0.0:23
     Playing movie sw1.txt
 
@@ -99,3 +115,10 @@ place this configuration into `/etc/xinetd.d/telnet`:
             server_args     = -u -OO /opt/asciiplayer/ascii_telnet_server.py -f /opt/asciiplayer/sw1.txt --stdout
     }
 
+
+Badapple movie 
+--------------
+
+Simply type
+     
+    $> python ascii_telnet_server.py -f ./sample_movies/badapple.txt --stdout -S 80x24 -s 80x25 -r 60
