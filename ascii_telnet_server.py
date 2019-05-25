@@ -52,7 +52,7 @@ from ascii_telnet.ascii_player import VT100Player
 from ascii_telnet.ascii_server import TelnetRequestHandler, ThreadedTCPServer
 
 
-def runTcpServer(interface, port, filename):
+def runTcpServer(interface, port, filename, framerate, sizew, sizeh, fsizew, fsizeh):
     """
     Start a TCP server that a client can connect to that streams the output of
      Ascii Player
@@ -61,25 +61,40 @@ def runTcpServer(interface, port, filename):
         interface (str):  bind to this interface
         port (int): bind to this port
         filename (str): file name of the ASCII movie
+        framerate (int): FPS of the movie
+        sizew (int): Width of the screen
+        sizeh (int): Height of the screen(Including timebar)
+        fsizew (int): Width of the movie
+        fsizeh (int): Height of the movie
     """
     TelnetRequestHandler.filename = filename
+    TelnetRequestHandler.framerate = framerate
+    TelnetRequestHandler.sizew = sizew
+    TelnetRequestHandler.sizeh = sizeh
+    TelnetRequestHandler.fsizew = fsizew
+    TelnetRequestHandler.fsizeh = fsizeh
     server = ThreadedTCPServer((interface, port), TelnetRequestHandler)
     server.serve_forever()
 
 
-def runStdOut(filepath):
+def runStdOut(filepath, framerate, sizew, sizeh, fsizew, fsizeh):
     """
     Stream the output of the Ascii Player to STDOUT
     Args:
         filepath (str): file path of the ASCII movie
+        framerate (int): FPS of the movie
+        sizew (int): Width of the screen
+        sizeh (int): Height of the screen(Including timebar)
+        fsizew (int): Width of the movie
+        fsizeh (int): Height of the movie
     """
 
     def draw_frame_to_stdout(screen_buffer):
         sys.stdout.write(screen_buffer.read().decode('iso-8859-15'))
 
-    movie = Movie()
+    movie = Movie(sizew, sizeh, fsizew, fsizeh)
     movie.load(filepath)
-    player = VT100Player(movie)
+    player = VT100Player(movie, framerate)
     player.draw_frame = draw_frame_to_stdout
     player.play()
 
@@ -106,22 +121,48 @@ if __name__ == "__main__":
                       help="Verbose (default for TCP server)")
     parser.add_option("-q", "--quiet", action="store_false", dest="verbose",
                       help="Quiet! (default for STDIN STDOUT server)")
+    parser.add_option("-r","--framerate",dest="framerate",metavar="FPS",
+                      help="Set the framerate of the movie(default 24)")
+    parser.add_option("-s","--size",dest="size",metavar="WIDTHxHEIGHT",
+                      help="Set the screen size of the movie(default 80x24). "+
+                           "Including the timebar, so the maximum framesize is WIDTHx(HEIGHT-1)"+
+                           "(default maximum 80x23)")
+    parser.add_option("-S","--framesize",dest="framesize",metavar="FRAME_WIDTHxFRAME_HEIGHT",
+                      help="Set the frame size(depending on the movie you are to play) "+
+                           "(default 67x13)")
     parser.set_defaults(interface="0.0.0.0",
                         port=23,
                         tcpserv=True,
-                        verbose=True, )
+                        verbose=True,
+                        framerate=24,
+                        size="80x24",
+                        framesize="67x13" )
     options = parser.parse_args()[0]
 
     if not (options.filename and os.path.exists(options.filename)):
         parser.exit(1, "Error, file not found! See --help for details.\n")
+    
+    try:
+        framerate = int(options.framerate)
+        sizew = int(options.size.split("x",1)[0])
+        sizeh = int(options.size.split("x",1)[1])
+        fsizew = int(options.framesize.split("x",1)[0])
+        fsizeh = int(options.framesize.split("x",1)[1])
+    except ValueError:
+        print("Pleasi enter integer when specifying framerate/[frame]size.")
+        os._exit(0)
+    if fsizew > sizew or fsizeh > sizeh-1:
+        print("Framesize too large!")
+        os._exit(0)
 
     try:
         if options.tcpserv:
             if options.verbose:
                 print("Running TCP server on {0}:{1}".format(options.interface, options.port))
                 print("Playing movie {0}".format(options.filename))
-            runTcpServer(options.interface, options.port, options.filename)
+            runTcpServer(options.interface, options.port, options.filename,
+                         framerate, sizew ,sizeh, fsizew, fsizeh)
         else:
-            runStdOut(options.filename)
+            runStdOut(options.filename, framerate, sizew, sizeh, fsizew, fsizeh)
     except KeyboardInterrupt:
         print("Ascii Player Quit.")

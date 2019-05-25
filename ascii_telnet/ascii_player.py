@@ -43,7 +43,7 @@ class VT100Player(object):
     CLEARSCRN = ESC + "[2J"  # Clear entire screen
     CLEARDOWN = ESC + "[J"  # Clear screen from cursor down
 
-    def __init__(self, movie):
+    def __init__(self, movie, framerate = 24):
         """
         Player class plays a movie.
         It also stores the current position.
@@ -56,6 +56,7 @@ class VT100Player(object):
         self._movie = movie
         self._cursor = 0  # virtual cursor pointing to the current frame
         self._frame_count = 0
+        self._framerate = int(framerate)
 
         self._stopped = False
 
@@ -69,15 +70,33 @@ class VT100Player(object):
     def play(self):
         """
         Plays the movie
+
+        The 'very long' 'if' condition is for the 
+        stability of the frame rate
+
+        If the actuall time(unpredictable) is not in the time window of the current frame,
+        just skip this frame
         """
         self._stopped = False
+        oldTime = time.time()
+        r = self._framerate
         for frame in self._movie.frames:
             if self._stopped:
                 return
-            self._cursor += frame.display_time
-            self._load_frame(frame, self._cursor)
-            time.sleep(frame.display_time / 15)
+            if (time.time() - oldTime) * r >= self._cursor and (time.time() - oldTime) * r < self._cursor + frame.display_time:
+                self._cursor += frame.display_time
+                self._load_frame(frame, self._cursor)
+                time.sleep((self._cursor - (time.time() - oldTime)*r)/r)
+            else:
+                """
+                Skip playing this frame and continue as if
+                it has been played
 
+                Due to 'time.sleep', the 'else' clause can only be reached 
+                when the second condition is violated
+                """
+                self._cursor += frame.display_time 
+          
     def stop(self):
         """
         Stop the movie
