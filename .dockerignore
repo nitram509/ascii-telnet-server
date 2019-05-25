@@ -1,6 +1,9 @@
+.idea
+.cache
 .gitignore
 .dockerignore
 .travis.yml
 dev_requirements.txt
 screenshots
 Dockerfile
+tests
