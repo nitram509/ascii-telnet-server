@@ -1,10 +1,10 @@
-Usage of badapple.txt
-=====================
+How to play Bad Apple movie?
+============================
 
 Just type the following command to view it locally
 (You can try it as a telnet server if you are confident about your network)
 
-    $> python ascii_telnet_server.py -f ./sample_movies/badapple.txt --stdout -S 80x24 -s 80x25 -r 60
+    $> python ascii_telnet_server.py -f ./movies/badapple.txt --stdout -S 80x24 -s 80x25 -r 60
 
 Copyright
 ---------

@@ -1,7 +1,7 @@
 FROM python:3.7-alpine
 
 ENV mode stdout
-ENV input_file sample_movies/short_intro.txt
+ENV input_file movies/short_intro.txt
 
 RUN mkdir /app
 WORKDIR /app
