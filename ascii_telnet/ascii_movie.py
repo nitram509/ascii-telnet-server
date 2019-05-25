@@ -114,15 +114,15 @@ class TimeBar(object):
 
 
 class Movie(object):
-    def __init__(self, width=80, height=24, frame_width=67, frame_height=13):
+    def __init__(self, screen_width=80, screen_height=24, frame_width=67, frame_height=13):
         """
         A Movie object consists of frames and is empty by default.
         Movies are loaded from text files.
         A movie only can be loaded once. A second try will fail.
 
         Args:
-            width (int): Screen width
-            height (int): Screen height(Including the timebar)
+            screen_width (int): Screen width
+            screen_height (int): Screen height (Including the timebar)
             frame_width (int): Movie width
             frame_height (int): Movie height
         """
@@ -136,8 +136,8 @@ class Movie(object):
         f.data.append("No movie yet loaded.")
         self.frames.append(f)
 
-        self.screen_width = width
-        self.screen_height = height
+        self.screen_width = screen_width
+        self.screen_height = screen_height
 
         self.left_margin = (self.screen_width - self._frame_width) // 2
         self.top_margin = (self.screen_height - self._frame_height - TimeBar.height) // 2

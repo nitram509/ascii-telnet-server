@@ -32,6 +32,11 @@ from io import BytesIO
 
 from ascii_telnet.ascii_movie import TimeBar
 
+"""
+The default frame rate to play a movie.
+"""
+DEFAULT_FRAMERATE = 24
+
 
 class VT100Player(object):
     """
@@ -43,7 +48,7 @@ class VT100Player(object):
     CLEARSCRN = ESC + "[2J"  # Clear entire screen
     CLEARDOWN = ESC + "[J"  # Clear screen from cursor down
 
-    def __init__(self, movie, framerate = 24):
+    def __init__(self, movie, framerate=DEFAULT_FRAMERATE):
         """
         Player class plays a movie.
         It also stores the current position.
@@ -78,15 +83,16 @@ class VT100Player(object):
         just skip this frame
         """
         self._stopped = False
-        oldTime = time.time()
+        old_time = time.time()
         r = self._framerate
         for frame in self._movie.frames:
             if self._stopped:
                 return
-            if (time.time() - oldTime) * r >= self._cursor and (time.time() - oldTime) * r < self._cursor + frame.display_time:
+            if (time.time() - old_time) * r >= self._cursor and (
+                    time.time() - old_time) * r < self._cursor + frame.display_time:
                 self._cursor += frame.display_time
                 self._load_frame(frame, self._cursor)
-                time.sleep((self._cursor - (time.time() - oldTime)*r)/r)
+                time.sleep((self._cursor - (time.time() - old_time) * r) / r)
             else:
                 """
                 Skip playing this frame and continue as if
@@ -95,8 +101,8 @@ class VT100Player(object):
                 Due to 'time.sleep', the 'else' clause can only be reached 
                 when the second condition is violated
                 """
-                self._cursor += frame.display_time 
-          
+                self._cursor += frame.display_time
+
     def stop(self):
         """
         Stop the movie

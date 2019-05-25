@@ -51,7 +51,7 @@ import sys
 from optparse import OptionParser
 
 from ascii_telnet.ascii_movie import Movie
-from ascii_telnet.ascii_player import VT100Player
+from ascii_telnet.ascii_player import VT100Player, DEFAULT_FRAMERATE
 from ascii_telnet.ascii_server import TelnetRequestHandler, ThreadedTCPServer
 
 
@@ -60,7 +60,6 @@ from ascii_telnet.ascii_server import TelnetRequestHandler, ThreadedTCPServer
 SEPARATOR = "x"
 DEFAULT_FRAME_SIZE = "67x13"
 DEFAULT_SCREEN_SIZE = "80x24"
-DEFAULT_FRAMERATE = 24
 DEFAULT_INTERFACE = "0.0.0.0"
 DEFAULT_PORT = 23
 
