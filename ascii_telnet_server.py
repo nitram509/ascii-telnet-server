@@ -2,7 +2,7 @@
 # !/usr/bin/env python
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#  Copyright (c) 2008, Martin W. Kirst All rights reserved.
+#  Copyright (c) 2008..2019, Martin W. Kirst All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -29,7 +29,7 @@
 
 """
   ASCII art movie Telnet player.
-  Version         : 0.1
+  Version         : 0.2
 
   Can stream an ~20 minutes ASCII movie via Telnet emulation
   as stand alone server or via xinetd daemon.
@@ -38,7 +38,10 @@
   Original art work : Simon Jansen ( http://www.asciimation.co.nz/ )
   Telnetification
   & Player coding   : Martin W. Kirst ( https://github.com/nitram509/ascii-telnet-server )
-  Python3 Update: Ryan Jarvis
+
+  Contributors
+  Ryan Jarvis : Python3 update
+  @ZenithalHourlyRate : Bad Apple movie, frame rate stabilization
 
 """
 from __future__ import division, print_function
