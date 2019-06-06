@@ -1,8 +1,0 @@
-10
-abc
-
-abc
-5
-abc
-abc
-abc

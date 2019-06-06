@@ -25,6 +25,8 @@
 #  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+from __future__ import division, print_function
+
 
 class Frame(object):
     def __init__(self, display_time=1):
@@ -78,7 +80,7 @@ class TimeBar(object):
 
         return u"{tb.left_decorator}{internals}{tb.right_decorator}".format(internals=time_bar_internals, tb=self)
 
-    def get_marker_position(self, frame_num):
+    def get_marker_postion(self, frame_num):
         """
         Return the index for the marker position on the TimeBar's internal length
         Args:
@@ -88,6 +90,7 @@ class TimeBar(object):
             int: index number for marker
 
         """
+
         return int(round(self.internal_length / self.duration * frame_num, 0))
 
     def get_timebar(self, frame_num):
@@ -99,7 +102,7 @@ class TimeBar(object):
             str: String representation of the TimeBar at the given Frame Number
                 Example:  "<    o               >"
         """
-        marker_pos = self.get_marker_position(frame_num)
+        marker_pos = self.get_marker_postion(frame_num)
 
         if marker_pos >= self.internal_length:
             # Make sure we never overwrite the end decorator.
@@ -111,29 +114,73 @@ class TimeBar(object):
 
 
 class Movie(object):
-    # TODO: screen width and height should be derived from frame size per default, no need for configuration
-    # TODO: try to be smart and determine frame height and width as well automatically
-    def __init__(self, screen_width=80, screen_height=24, frame_width=0, frame_height=0):
+    def __init__(self, width=80, height=24):
         """
         A Movie object consists of frames and is empty by default.
+        Movies are loaded from text files.
+        A movie only can be loaded once. A second try will fail.
 
         Args:
-            screen_width (int): Screen width
-            screen_height (int): Screen height (Including the timebar)
-            frame_width (int): Movie width, if value < 0  means auto determine frame width
-            frame_height (int): Movie height
+            width (int): Movie screen width.
+            height (int): Movie screen height
         """
         self.frames = []
+        self._loaded = False
 
-        self.frame_width = frame_width  # type: int
-        self.frame_height = frame_height  # type: int
+        self._frame_width = 67
+        self._frame_height = 13
 
         f = Frame()
         f.data.append("No movie yet loaded.")
         self.frames.append(f)
 
-        self.screen_width = screen_width
-        self.screen_height = screen_height
+        self.screen_width = width
+        self.screen_height = height
 
-        self.left_margin = (self.screen_width - self.frame_width) // 2
-        self.top_margin = (self.screen_height - self.frame_height - TimeBar.height) // 2
+        self.left_margin = (self.screen_width - self._frame_width) // 2
+        self.top_margin = (self.screen_height - self._frame_height - TimeBar.height) // 2
+
+    def load(self, filepath):
+        """
+        Loads the ASCII movie from given text file.
+        Using an encoded format, described on
+        http://www.asciimation.co.nz/asciimation/ascii_faq.html
+        In short:
+            67x14 chars
+            lines separated with \n
+            first line is a number telling delay in number of frames
+            13 lines effective frame size
+            15 frames per second
+
+        Args:
+            filepath (str): Path to Ascii Movie Data
+        """
+        if self._loaded:
+            # we don't want to be loaded twice.
+            return False
+        self.frames = []
+        current_frame = None
+        lines_per_frame = self._frame_height + TimeBar.height  # incl. meta data (time information)
+
+        with open(filepath) as f:
+            for line_num, line in enumerate(f):
+                time_metadata = None
+
+                if line_num % lines_per_frame == 0:
+                    time_metadata = int(line.strip())
+
+                if time_metadata is not None:
+                    current_frame = Frame(display_time=time_metadata)
+                    self.frames.append(current_frame)
+                else:
+                    # First strip every white character from the right
+                    # The amount of white space can be variable
+                    line = line.rstrip()
+                    # Second fill line out with blanks so that any previous
+                    # characters are overwritten
+                    line = line.ljust(self._frame_width)
+                    # Third center the frame on the screen
+                    line = line.rjust(self.left_margin + self._frame_width)
+                    current_frame.data.append(line)
+        self._loaded = True
+        return True
