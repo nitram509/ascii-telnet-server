@@ -18,6 +18,8 @@ Telnetification & Player coding : Martin W. Kirst
 Python3 Update: Ryan Jarvis
 Dockerfile contributed by: Manuel Eusebio de Paz Carmona
 
+Build Status [![Build Status](https://travis-ci.org/nitram509/ascii-telnet-server.svg?branch=master)](https://travis-ci.org/nitram509/ascii-telnet-server)
+
 Command line parameters
 -----------------------
 
