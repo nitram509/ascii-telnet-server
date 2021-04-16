@@ -126,6 +126,15 @@ place this configuration into `/etc/xinetd.d/telnet`:
             server_args     = -u -OO /opt/asciiplayer/ascii_telnet_server.py -f /opt/asciiplayer/sw1.txt --stdout
     }
 
+## Development information
+
+### How to run tests?
+
+```shell
+pip install -r dev_requirements.txt
+python3 -m pytest
+```
+
 ## Stargazers over time
 
 [![Stargazers over time](https://starchart.cc/nitram509/ascii-telnet-server.svg)](https://starchart.cc/nitram509/ascii-telnet-server)
