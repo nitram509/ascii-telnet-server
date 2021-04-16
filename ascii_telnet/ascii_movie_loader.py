@@ -25,7 +25,7 @@
 #  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-from ascii_movie import Frame, Movie
+from ascii_telnet.ascii_movie import Frame, Movie
 
 
 def load_movie_from_file(filepath):
